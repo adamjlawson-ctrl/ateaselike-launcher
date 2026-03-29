@@ -1,0 +1,155 @@
+<UserControl
+    x:Class="AtEase.App.Views.TileSettingsView"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:AtEase.App.Helpers"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:AtEase.App.Models"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <helpers:PathExistenceHintConverter x:Key="PathExistenceHintConverter" />
+    </UserControl.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Launcher Settings" FontSize="30" FontWeight="SemiBold" />
+
+        <Border
+            Grid.Row="1"
+            Margin="0,12,0,12"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            CornerRadius="8"
+            Padding="10">
+            <TextBlock Text="{Binding StatusMessage}" TextWrapping="WrapWholeWords" />
+        </Border>
+
+        <ScrollViewer Grid.Row="2">
+            <StackPanel Spacing="18">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="12">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="App Tiles" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Add App" Command="{Binding AddAppTileCommand}" />
+                        </Grid>
+
+                        <ListView ItemsSource="{Binding AppTiles}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:AppItem">
+                                    <Grid ColumnSpacing="8" Margin="0,4,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="90" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox Grid.Column="0" Header="Name" Text="{Binding DisplayName, Mode=TwoWay}" />
+
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBox Header="Path" Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBlock
+                                                Text="{Binding Path, Converter={StaticResource PathExistenceHintConverter}, ConverterParameter=file}"
+                                                FontSize="12"
+                                                Opacity="0.75" />
+                                        </StackPanel>
+
+                                        <Button
+                                            Grid.Column="2"
+                                            VerticalAlignment="Bottom"
+                                            Content="Browse"
+                                            Command="{Binding DataContext.BrowseAppPathCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                        <CheckBox Grid.Column="3" Content="Visible" VerticalAlignment="Center" IsChecked="{Binding IsVisible, Mode=TwoWay}" />
+                                        <NumberBox Grid.Column="4" Header="Sort" SpinButtonPlacementMode="Compact" Value="{Binding SortOrder, Mode=TwoWay}" />
+                                        <Button
+                                            Grid.Column="5"
+                                            VerticalAlignment="Bottom"
+                                            Content="Remove"
+                                            Command="{Binding DataContext.RemoveAppTileCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="12">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Folder Tiles" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Add Folder" Command="{Binding AddFolderTileCommand}" />
+                        </Grid>
+
+                        <ListView ItemsSource="{Binding FolderTiles}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:FolderItem">
+                                    <Grid ColumnSpacing="8" Margin="0,4,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="90" />
+                                            <ColumnDefinition Width="110" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox Grid.Column="0" Header="Name" Text="{Binding DisplayName, Mode=TwoWay}" />
+
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBox Header="Path" Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBlock
+                                                Text="{Binding Path, Converter={StaticResource PathExistenceHintConverter}, ConverterParameter=folder}"
+                                                FontSize="12"
+                                                Opacity="0.75" />
+                                        </StackPanel>
+
+                                        <Button
+                                            Grid.Column="2"
+                                            VerticalAlignment="Bottom"
+                                            Content="Browse"
+                                            Command="{Binding DataContext.BrowseFolderPathCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                        <CheckBox Grid.Column="3" Content="Visible" VerticalAlignment="Center" IsChecked="{Binding IsVisible, Mode=TwoWay}" />
+                                        <NumberBox Grid.Column="4" Header="Sort" SpinButtonPlacementMode="Compact" Value="{Binding SortOrder, Mode=TwoWay}" />
+                                        <Button
+                                            Grid.Column="5"
+                                            VerticalAlignment="Bottom"
+                                            Content="Remove"
+                                            Command="{Binding DataContext.RemoveFolderTileCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Save Changes" Command="{Binding SaveCommand}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
