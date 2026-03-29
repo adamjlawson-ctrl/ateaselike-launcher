@@ -19,7 +19,10 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var window = new MainWindow(_services.GetRequiredService<LauncherViewModel>());
+        var window = new MainWindow(
+            _services.GetRequiredService<LauncherViewModel>(),
+            _services.GetRequiredService<Services.ApplicationWindowSwitchService>(),
+            _services.GetRequiredService<Services.WindowHandleService>());
         window.Activate();
     }
 
@@ -32,6 +35,9 @@ public partial class App : Application
         services.AddSingleton<Services.PathPickerService>();
         services.AddSingleton<Services.WallpaperService>();
         services.AddSingleton<Services.RemovableMediaService>();
+        services.AddSingleton<Services.SpecialMenuActionService>();
+        services.AddSingleton<Services.ApplicationWindowSwitchService>();
+        services.AddSingleton<Services.DisplayLayoutService>();
 
         services.AddTransient<TileSettingsViewModel>();
         services.AddTransient<SettingsWindow>();

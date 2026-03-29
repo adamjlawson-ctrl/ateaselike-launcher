@@ -211,6 +211,12 @@ public class SettingsService
 
     private static string NormalizeLauncherSection(string? section)
     {
+        if (!string.IsNullOrWhiteSpace(section) &&
+            section.StartsWith(ProfileSettings.LauncherSectionMediaPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return section;
+        }
+
         if (string.Equals(section, ProfileSettings.LauncherSectionFolders, StringComparison.OrdinalIgnoreCase))
         {
             return ProfileSettings.LauncherSectionFolders;

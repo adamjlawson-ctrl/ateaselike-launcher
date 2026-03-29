@@ -10,6 +10,11 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <SolidColorBrush x:Key="BevelFaceBrush" Color="#FFC8B79C" />
+        <SolidColorBrush x:Key="BevelTopLeftBrush" Color="#FFF3E7D5" />
+        <SolidColorBrush x:Key="BevelBottomRightBrush" Color="#FF6A5B46" />
+        <SolidColorBrush x:Key="BevelFacePressedBrush" Color="#FFBCA98E" />
+
         <Style x:Key="ClassicIconButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -18,6 +23,109 @@
             <Setter Property="Padding" Value="2" />
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Foreground" Value="#FF111111" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="FocusVisualPrimaryBrush" Value="#AA222222" />
+            <Setter Property="FocusVisualSecondaryBrush" Value="#00FFFFFF" />
+            <Setter Property="FocusVisualPrimaryThickness" Value="1" />
+            <Setter Property="FocusVisualSecondaryThickness" Value="0" />
+        </Style>
+
+        <Style x:Key="ClassicBevelTabButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource BevelFaceBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8,4,0,0" />
+            <Setter Property="Padding" Value="12,3,12,2" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#FF161616" />
+            <Setter Property="FocusVisualPrimaryBrush" Value="#FF222222" />
+            <Setter Property="FocusVisualSecondaryBrush" Value="#00FFFFFF" />
+            <Setter Property="FocusVisualPrimaryThickness" Value="1" />
+            <Setter Property="FocusVisualSecondaryThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="RootGrid" Margin="0,3,0,0">
+                            <Border x:Name="FaceBorder" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" />
+                            <Rectangle x:Name="TopEdge" Height="1" Fill="{StaticResource BevelTopLeftBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="1,0,1,0" />
+                            <Rectangle x:Name="LeftEdge" Width="1" Fill="{StaticResource BevelTopLeftBrush}" HorizontalAlignment="Left" VerticalAlignment="Stretch" Margin="0,1,0,1" />
+                            <Rectangle x:Name="BottomEdge" Height="1" Fill="{StaticResource BevelBottomRightBrush}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="1,0,1,0" />
+                            <Rectangle x:Name="RightEdge" Width="1" Fill="{StaticResource BevelBottomRightBrush}" HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="0,1,0,1" />
+
+                            <ContentPresenter
+                                x:Name="ContentPresenter"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="{TemplateBinding Padding}" />
+
+                            <Rectangle
+                                x:Name="FocusRect"
+                                Stroke="{TemplateBinding FocusVisualPrimaryBrush}"
+                                StrokeThickness="{TemplateBinding FocusVisualPrimaryThickness}"
+                                Opacity="0"
+                                IsHitTestVisible="False"
+                                Margin="1" />
+                        </Grid>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="FaceBorder" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="#FFD0BFA4" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="FaceBorder" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BevelFacePressedBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TopEdge" Storyboard.TargetProperty="Fill">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BevelBottomRightBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LeftEdge" Storyboard.TargetProperty="Fill">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BevelBottomRightBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BottomEdge" Storyboard.TargetProperty="Fill">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BevelTopLeftBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RightEdge" Storyboard.TargetProperty="Fill">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource BevelTopLeftBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Margin">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="13,4,11,1" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="Opacity" To="0.6" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="FocusRect" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Unfocused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="FocusRect" Storyboard.TargetProperty="Opacity" To="0" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="IconGridViewItemStyle" TargetType="GridViewItem">
@@ -27,8 +135,28 @@
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
         </Style>
 
+        <Style x:Key="ClassicMenuTitleButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="5,1,5,1" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#FF111111" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FocusVisualPrimaryBrush" Value="#AA222222" />
+            <Setter Property="FocusVisualSecondaryBrush" Value="#00FFFFFF" />
+            <Setter Property="FocusVisualPrimaryThickness" Value="1" />
+            <Setter Property="FocusVisualSecondaryThickness" Value="0" />
+        </Style>
+
         <helpers:IconImageSourceConverter x:Key="IconImageSourceConverter" />
         <helpers:IconImageVisibilityConverter x:Key="IconImageVisibilityConverter" />
+        <helpers:PressedBevelEdgeBrushConverter x:Key="PressedBevelEdgeBrushConverter" />
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
 
     <Grid>
@@ -55,60 +183,116 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Background="#FFE6E6E6" Height="30">
+            <Grid Background="#FFE5E5E5" Height="22">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="14" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock
-                    Text="At Ease"
-                    Margin="10,0,0,0"
-                    FontSize="15"
-                    FontWeight="SemiBold"
-                    Foreground="#FF111111"
-                    VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="1" Margin="4,0,0,0" Visibility="{Binding LauncherMenuVisibility}">
+                    <Button Style="{StaticResource ClassicMenuTitleButtonStyle}" Content="File" Click="OpenMenuFlyout_Click">
+                        <Button.Resources>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#16000000" />
+                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#26000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                        </Button.Resources>
+                        <FlyoutBase.AttachedFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Open Settings" Command="{Binding OpenSettingsFromMenuCommand}" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem Text="Quit" Command="{Binding QuitCommand}" />
+                            </MenuFlyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </Button>
 
-                <MenuBar Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left">
-                    <MenuBarItem Title="File">
-                        <MenuFlyoutItem Text="Open Settings" Command="{Binding OpenSettingsFromMenuCommand}" />
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem Text="Quit" Command="{Binding QuitCommand}" />
-                    </MenuBarItem>
+                    <Button Style="{StaticResource ClassicMenuTitleButtonStyle}" Content="View" Click="OpenMenuFlyout_Click">
+                        <Button.Resources>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#16000000" />
+                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#26000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                        </Button.Resources>
+                        <FlyoutBase.AttachedFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Refresh Launcher" Command="{Binding RefreshLauncherViewCommand}" />
+                                <MenuFlyoutItem Text="Refresh Background" Command="{Binding RefreshBackgroundCommand}" />
+                            </MenuFlyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </Button>
 
-                    <MenuBarItem Title="View">
-                        <MenuFlyoutItem Text="Refresh Launcher" Command="{Binding RefreshLauncherViewCommand}" />
-                        <MenuFlyoutItem Text="Refresh Background" Command="{Binding RefreshBackgroundCommand}" />
-                    </MenuBarItem>
+                    <Button Style="{StaticResource ClassicMenuTitleButtonStyle}" Content="Special" Click="OpenMenuFlyout_Click">
+                        <Button.Resources>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#16000000" />
+                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#26000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                        </Button.Resources>
+                        <FlyoutBase.AttachedFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Sleep" Command="{Binding SleepCommand}" />
+                                <MenuFlyoutItem Text="Shut Down" Command="{Binding ShutDownCommand}" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem Text="Exit At Ease" Command="{Binding ExitAtEaseCommand}" />
+                                <MenuFlyoutItem Text="Eject Removable Media..." Click="EjectRemovableMediaMenuItem_Click" />
+                            </MenuFlyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </Button>
 
-                    <MenuBarItem Title="Special">
-                        <MenuFlyoutItem Text="Sleep" Command="{Binding SleepCommand}" />
-                        <MenuFlyoutItem Text="Shut Down" Command="{Binding ShutDownCommand}" />
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem Text="Exit At Ease" Command="{Binding ExitAtEaseCommand}" />
-                        <MenuFlyoutItem Text="Eject Removable Media..." Command="{Binding EjectRemovableMediaCommand}" />
-                    </MenuBarItem>
+                    <Button Style="{StaticResource ClassicMenuTitleButtonStyle}" Content="Panels" Click="OpenMenuFlyout_Click">
+                        <Button.Resources>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#16000000" />
+                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#26000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                        </Button.Resources>
+                        <FlyoutBase.AttachedFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Apps" Command="{Binding SwitchPanelCommand}" CommandParameter="apps" />
+                                <MenuFlyoutItem Text="Folders" Command="{Binding SwitchPanelCommand}" CommandParameter="folders" />
+                            </MenuFlyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </Button>
+                </StackPanel>
 
-                    <MenuBarItem Title="Panels">
-                        <MenuFlyoutItem Text="Apps" Command="{Binding SwitchPanelCommand}" CommandParameter="apps" />
-                        <MenuFlyoutItem Text="Folders" Command="{Binding SwitchPanelCommand}" CommandParameter="folders" />
-                    </MenuBarItem>
-                </MenuBar>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8" Margin="0,0,6,0">
+                    <Button
+                        Visibility="{Binding ReturnToAtEaseButtonVisibility}"
+                        Style="{StaticResource ClassicMenuTitleButtonStyle}"
+                        Content="Return to At Ease"
+                        Command="{Binding ReturnToAtEaseCommand}" />
 
-                <TextBlock
-                    Grid.Column="3"
-                    Text="{Binding ClockText}"
-                    Margin="0,0,12,0"
-                    FontSize="14"
-                    FontWeight="SemiBold"
-                    Foreground="#FF111111"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Right" />
+                    <TextBlock
+                        Text="{Binding ClockText}"
+                        FontSize="12"
+                        FontWeight="Normal"
+                        Foreground="#FF111111"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right" />
+
+                    <Button Style="{StaticResource ClassicMenuTitleButtonStyle}" Click="ApplicationIndicator_Click" MinWidth="130" MaxWidth="220">
+                        <Button.Resources>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#16000000" />
+                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#26000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                        </Button.Resources>
+
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <Rectangle Width="8" Height="8" Fill="#FF2B2B2B" RadiusX="1" RadiusY="1" VerticalAlignment="Center" />
+                            <TextBlock
+                                Text="{Binding CurrentApplicationDisplayName}"
+                                FontSize="12"
+                                Foreground="#FF111111"
+                                TextTrimming="CharacterEllipsis"
+                                MaxWidth="180"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="1" Margin="10,10,10,10">
+            <Grid Grid.Row="1" Margin="10,10,10,10" Visibility="{Binding LauncherContentVisibility}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -128,17 +312,11 @@
 
                     <Button
                         Visibility="{Binding AppsInactiveTabVisibility}"
+                        Style="{StaticResource ClassicBevelTabButtonStyle}"
                         Content="Apps"
                         Command="{Binding SwitchPanelCommand}"
                         CommandParameter="apps"
-                        Background="#FFC4B398"
-                        BorderBrush="#FF000000"
-                        BorderThickness="1"
-                        CornerRadius="9,6,0,0"
-                        Margin="0,3,0,0"
-                        Padding="12,3,12,2"
-                        FontSize="13"
-                        Foreground="#FF161616" />
+                        />
 
                     <Border
                         Visibility="{Binding FoldersActiveTabVisibility}"
@@ -153,17 +331,45 @@
 
                     <Button
                         Visibility="{Binding FoldersInactiveTabVisibility}"
+                        Style="{StaticResource ClassicBevelTabButtonStyle}"
                         Content="Folders"
                         Command="{Binding SwitchPanelCommand}"
                         CommandParameter="folders"
-                        Background="#FFC4B398"
-                        BorderBrush="#FF000000"
-                        BorderThickness="1"
-                        CornerRadius="9,6,0,0"
-                        Margin="0,3,0,0"
-                        Padding="12,3,12,2"
-                        FontSize="13"
-                        Foreground="#FF161616" />
+                        />
+
+                    <ItemsControl
+                        ItemsSource="{Binding RemovableMediaPanels}"
+                        Visibility="{Binding RemovableMediaTabsVisibility}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:RemovableMediaPanel">
+                                <Grid>
+                                    <Border
+                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        Background="#FFD6C3A4"
+                                        BorderBrush="#FF000000"
+                                        BorderThickness="1,1,1,0"
+                                        CornerRadius="10,6,0,0"
+                                        Margin="0,0,0,-1"
+                                        Padding="14,3,14,3">
+                                        <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" Foreground="#FF101010" />
+                                    </Border>
+
+                                    <Button
+                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}"
+                                        Style="{StaticResource ClassicBevelTabButtonStyle}"
+                                        Content="{Binding Title}"
+                                        Command="{Binding DataContext.OpenMediaPanelCommand, ElementName=Root}"
+                                        CommandParameter="{Binding Id}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
 
                 <Border
@@ -190,11 +396,28 @@
                             </Grid.RowDefinitions>
 
                             <TextBlock
-                                Text="{Binding StatusMessage}"
+                                Text="{Binding ActivePanelLabel}"
                                 FontSize="12"
                                 Foreground="#FF2A2A2A"
-                                HorizontalAlignment="Right"
+                                HorizontalAlignment="Left"
+                                FontWeight="SemiBold"
                                 TextTrimming="CharacterEllipsis" />
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                <Button
+                                    Visibility="{Binding FolderBackButtonVisibility}"
+                                    Style="{StaticResource ClassicMenuTitleButtonStyle}"
+                                    Content="Back"
+                                    Command="{Binding NavigateFolderBackCommand}" />
+
+                                <TextBlock
+                                    Text="{Binding StatusMessage}"
+                                    FontSize="12"
+                                    Foreground="#FF2A2A2A"
+                                    VerticalAlignment="Center"
+                                    TextTrimming="CharacterEllipsis"
+                                    MaxWidth="520" />
+                            </StackPanel>
 
                             <Grid Grid.Row="1" Margin="0,8,0,0">
                                 <ScrollViewer Visibility="{Binding AppsPanelVisibility}">
@@ -217,27 +440,65 @@
                                             <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:AppItem">
                                                     <Button
-                                                        Width="90"
-                                                        Height="88"
-                                                        Margin="3"
+                                                        x:Name="AppIconButton"
+                                                        Width="84"
+                                                        Height="80"
+                                                        Margin="2"
                                                         Style="{StaticResource ClassicIconButtonStyle}"
                                                         HorizontalContentAlignment="Center"
                                                         VerticalContentAlignment="Top"
-                                                        Command="{Binding DataContext.AppTileClickCommand, ElementName=Root}"
-                                                        CommandParameter="{Binding}">
-                                                        <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                            <Grid Width="34" Height="34">
+                                                        Click="AppItemButton_Click">
+                                                        <Button.Resources>
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                                                        </Button.Resources>
+
+                                                        <StackPanel Spacing="1" HorizontalAlignment="Center">
+                                                            <Grid Width="36" Height="36">
+                                                                <Border
+                                                                    Background="#FFD8D8D8"
+                                                                    BorderBrush="#FF222222"
+                                                                    BorderThickness="1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=AppIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Top"
+                                                                    Margin="1,1,1,0" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=AppIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Left"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="1,1,0,1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=AppIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Bottom"
+                                                                    Margin="1,0,1,1" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=AppIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="0,1,1,1" />
+
                                                                 <Image
-                                                                    Width="32"
-                                                                    Height="32"
+                                                                    Width="24"
+                                                                    Height="24"
                                                                     Stretch="Uniform"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
                                                                     Source="{Binding IconHint, Converter={StaticResource IconImageSourceConverter}}"
                                                                     Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}}" />
 
                                                                 <Grid Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}, ConverterParameter=invert}">
                                                                     <Border
-                                                                        Width="28"
-                                                                        Height="28"
+                                                                        Width="22"
+                                                                        Height="22"
                                                                         HorizontalAlignment="Center"
                                                                         VerticalAlignment="Center"
                                                                         Background="#FFF0EDE7"
@@ -252,13 +513,22 @@
                                                                 </Grid>
                                                             </Grid>
 
-                                                            <TextBlock
-                                                                Text="{x:Bind DisplayName}"
-                                                                FontSize="10"
-                                                                MaxWidth="82"
-                                                                TextAlignment="Center"
-                                                                TextWrapping="WrapWholeWords"
-                                                                TextTrimming="CharacterEllipsis" />
+                                                            <Border
+                                                                Background="#FFF2F2F2"
+                                                                BorderBrush="#FF111111"
+                                                                BorderThickness="1"
+                                                                Padding="2,0"
+                                                                MinHeight="12"
+                                                                MaxWidth="78">
+                                                                <TextBlock
+                                                                    Text="{x:Bind DisplayName}"
+                                                                    FontSize="8"
+                                                                    LineHeight="9"
+                                                                    CharacterSpacing="0"
+                                                                    TextAlignment="Center"
+                                                                    TextWrapping="NoWrap"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </Border>
                                                         </StackPanel>
                                                     </Button>
                                                 </DataTemplate>
@@ -293,51 +563,98 @@
                                             <GridView.ItemTemplate>
                                                 <DataTemplate x:DataType="models:FolderItem">
                                                     <Button
-                                                        Width="90"
-                                                        Height="88"
-                                                        Margin="3"
+                                                        x:Name="FolderIconButton"
+                                                        Width="84"
+                                                        Height="80"
+                                                        Margin="2"
                                                         Style="{StaticResource ClassicIconButtonStyle}"
                                                         HorizontalContentAlignment="Center"
                                                         VerticalContentAlignment="Top"
-                                                        Command="{Binding DataContext.FolderTileClickCommand, ElementName=Root}"
-                                                        CommandParameter="{Binding}">
-                                                        <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                            <Grid Width="34" Height="34">
+                                                        Click="FolderRootItemButton_Click">
+                                                        <Button.Resources>
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                                                        </Button.Resources>
+
+                                                        <StackPanel Spacing="1" HorizontalAlignment="Center">
+                                                            <Grid Width="36" Height="36">
+                                                                <Border
+                                                                    Background="#FFD8D8D8"
+                                                                    BorderBrush="#FF222222"
+                                                                    BorderThickness="1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Top"
+                                                                    Margin="1,1,1,0" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Left"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="1,1,0,1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Bottom"
+                                                                    Margin="1,0,1,1" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="0,1,1,1" />
+
                                                                 <Image
-                                                                    Width="32"
-                                                                    Height="32"
+                                                                    Width="24"
+                                                                    Height="24"
                                                                     Stretch="Uniform"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
                                                                     Source="{Binding IconHint, Converter={StaticResource IconImageSourceConverter}}"
                                                                     Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}}" />
 
                                                                 <Grid Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}, ConverterParameter=invert}">
                                                                     <Border
-                                                                        Width="30"
-                                                                        Height="22"
+                                                                        Width="22"
+                                                                        Height="16"
                                                                         HorizontalAlignment="Center"
                                                                         VerticalAlignment="Bottom"
                                                                         Background="#FFF0EDE7"
                                                                         BorderBrush="#FF333333"
                                                                         BorderThickness="1" />
                                                                     <Border
-                                                                        Width="12"
-                                                                        Height="5"
+                                                                        Width="9"
+                                                                        Height="4"
                                                                         HorizontalAlignment="Left"
                                                                         VerticalAlignment="Top"
-                                                                        Margin="5,6,0,0"
+                                                                        Margin="9,8,0,0"
                                                                         Background="#FFF0EDE7"
                                                                         BorderBrush="#FF333333"
                                                                         BorderThickness="1" />
                                                                 </Grid>
                                                             </Grid>
 
-                                                            <TextBlock
-                                                                Text="{x:Bind DisplayName}"
-                                                                FontSize="10"
-                                                                MaxWidth="82"
-                                                                TextAlignment="Center"
-                                                                TextWrapping="WrapWholeWords"
-                                                                TextTrimming="CharacterEllipsis" />
+                                                            <Border
+                                                                Background="#FFF2F2F2"
+                                                                BorderBrush="#FF111111"
+                                                                BorderThickness="1"
+                                                                Padding="2,0"
+                                                                MinHeight="12"
+                                                                MaxWidth="78">
+                                                                <TextBlock
+                                                                    Text="{x:Bind DisplayName}"
+                                                                    FontSize="8"
+                                                                    LineHeight="9"
+                                                                    CharacterSpacing="0"
+                                                                    TextAlignment="Center"
+                                                                    TextWrapping="NoWrap"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </Border>
                                                         </StackPanel>
                                                     </Button>
                                                 </DataTemplate>
@@ -347,6 +664,291 @@
                                         <TextBlock
                                             Text="No folders configured."
                                             Visibility="{Binding FoldersEmptyVisibility}"
+                                            Foreground="#FF2A2A2A"
+                                            FontSize="12" />
+
+                                        <GridView
+                                            ItemsSource="{Binding FolderBrowserItems}"
+                                            Visibility="{Binding FolderBrowserGridVisibility}"
+                                            ItemContainerStyle="{StaticResource IconGridViewItemStyle}"
+                                            SelectionMode="None"
+                                            IsItemClickEnabled="False"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            ScrollViewer.VerticalScrollMode="Disabled"
+                                            HorizontalAlignment="Stretch">
+                                            <GridView.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="7" />
+                                                </ItemsPanelTemplate>
+                                            </GridView.ItemsPanel>
+
+                                            <GridView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:MediaPanelItem">
+                                                    <Button
+                                                        x:Name="FolderBrowserIconButton"
+                                                        Width="84"
+                                                        Height="80"
+                                                        Margin="2"
+                                                        Style="{StaticResource ClassicIconButtonStyle}"
+                                                        HorizontalContentAlignment="Center"
+                                                        VerticalContentAlignment="Top"
+                                                        Click="FolderBrowserItemButton_Click">
+                                                        <Button.Resources>
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                                                        </Button.Resources>
+
+                                                        <StackPanel Spacing="1" HorizontalAlignment="Center">
+                                                            <Grid Width="36" Height="36">
+                                                                <Border
+                                                                    Background="#FFD8D8D8"
+                                                                    BorderBrush="#FF222222"
+                                                                    BorderThickness="1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderBrowserIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Top"
+                                                                    Margin="1,1,1,0" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderBrowserIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Left"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="1,1,0,1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderBrowserIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Bottom"
+                                                                    Margin="1,0,1,1" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=FolderBrowserIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="0,1,1,1" />
+
+                                                                <Image
+                                                                    Width="24"
+                                                                    Height="24"
+                                                                    Stretch="Uniform"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Source="{Binding IconHint, Converter={StaticResource IconImageSourceConverter}}"
+                                                                    Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}}" />
+
+                                                                <Grid Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}, ConverterParameter=invert}">
+                                                                    <Border
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                        Width="22"
+                                                                        Height="16"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Bottom"
+                                                                        Background="#FFF0EDE7"
+                                                                        BorderBrush="#FF333333"
+                                                                        BorderThickness="1" />
+                                                                    <Border
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                        Width="9"
+                                                                        Height="4"
+                                                                        HorizontalAlignment="Left"
+                                                                        VerticalAlignment="Top"
+                                                                        Margin="9,8,0,0"
+                                                                        Background="#FFF0EDE7"
+                                                                        BorderBrush="#FF333333"
+                                                                        BorderThickness="1" />
+
+                                                                    <Border
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}"
+                                                                        Width="22"
+                                                                        Height="22"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Background="#FFF0EDE7"
+                                                                        BorderBrush="#FF333333"
+                                                                        BorderThickness="1" />
+                                                                    <Rectangle
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}"
+                                                                        Width="14"
+                                                                        Height="1"
+                                                                        Fill="#FF333333"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center" />
+                                                                </Grid>
+                                                            </Grid>
+
+                                                            <Border
+                                                                Background="#FFF2F2F2"
+                                                                BorderBrush="#FF111111"
+                                                                BorderThickness="1"
+                                                                Padding="2,0"
+                                                                MinHeight="12"
+                                                                MaxWidth="78">
+                                                                <TextBlock
+                                                                    Text="{x:Bind DisplayName}"
+                                                                    FontSize="8"
+                                                                    LineHeight="9"
+                                                                    CharacterSpacing="0"
+                                                                    TextAlignment="Center"
+                                                                    TextWrapping="NoWrap"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </GridView.ItemTemplate>
+                                        </GridView>
+
+                                        <TextBlock
+                                            Text="No visible files or folders in this folder."
+                                            Visibility="{Binding FolderBrowserEmptyVisibility}"
+                                            Foreground="#FF2A2A2A"
+                                            FontSize="12" />
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                                <ScrollViewer Visibility="{Binding MediaPanelVisibility}">
+                                    <StackPanel>
+                                        <GridView
+                                            ItemsSource="{Binding MediaItems}"
+                                            ItemContainerStyle="{StaticResource IconGridViewItemStyle}"
+                                            SelectionMode="None"
+                                            IsItemClickEnabled="False"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            ScrollViewer.VerticalScrollMode="Disabled"
+                                            HorizontalAlignment="Stretch">
+                                            <GridView.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="7" />
+                                                </ItemsPanelTemplate>
+                                            </GridView.ItemsPanel>
+
+                                            <GridView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:MediaPanelItem">
+                                                    <Button
+                                                        x:Name="MediaIconButton"
+                                                        Width="84"
+                                                        Height="80"
+                                                        Margin="2"
+                                                        Style="{StaticResource ClassicIconButtonStyle}"
+                                                        HorizontalContentAlignment="Center"
+                                                        VerticalContentAlignment="Top"
+                                                        Click="RemovableMediaItemButton_Click">
+                                                        <Button.Resources>
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#00000000" />
+                                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#00000000" />
+                                                        </Button.Resources>
+
+                                                        <StackPanel Spacing="1" HorizontalAlignment="Center">
+                                                            <Grid Width="36" Height="36">
+                                                                <Border
+                                                                    Background="#FFD8D8D8"
+                                                                    BorderBrush="#FF222222"
+                                                                    BorderThickness="1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=MediaIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Top"
+                                                                    Margin="1,1,1,0" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=MediaIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=tl}"
+                                                                    HorizontalAlignment="Left"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="1,1,0,1" />
+                                                                <Rectangle
+                                                                    Height="1"
+                                                                    Fill="{Binding IsPressed, ElementName=MediaIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Stretch"
+                                                                    VerticalAlignment="Bottom"
+                                                                    Margin="1,0,1,1" />
+                                                                <Rectangle
+                                                                    Width="1"
+                                                                    Fill="{Binding IsPressed, ElementName=MediaIconButton, Converter={StaticResource PressedBevelEdgeBrushConverter}, ConverterParameter=br}"
+                                                                    HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Stretch"
+                                                                    Margin="0,1,1,1" />
+
+                                                                <Image
+                                                                    Width="24"
+                                                                    Height="24"
+                                                                    Stretch="Uniform"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Source="{Binding IconHint, Converter={StaticResource IconImageSourceConverter}}"
+                                                                    Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}}" />
+
+                                                                <Grid Visibility="{Binding IconHint, Converter={StaticResource IconImageVisibilityConverter}, ConverterParameter=invert}">
+                                                                    <Border
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                        Width="22"
+                                                                        Height="16"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Bottom"
+                                                                        Background="#FFF0EDE7"
+                                                                        BorderBrush="#FF333333"
+                                                                        BorderThickness="1" />
+                                                                    <Border
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                        Width="9"
+                                                                        Height="4"
+                                                                        HorizontalAlignment="Left"
+                                                                        VerticalAlignment="Top"
+                                                                        Margin="9,8,0,0"
+                                                                        Background="#FFF0EDE7"
+                                                                        BorderBrush="#FF333333"
+                                                                        BorderThickness="1" />
+
+                                                                    <Border
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}"
+                                                                        Width="22"
+                                                                        Height="22"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Background="#FFF0EDE7"
+                                                                        BorderBrush="#FF333333"
+                                                                        BorderThickness="1" />
+                                                                    <Rectangle
+                                                                        Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}"
+                                                                        Width="14"
+                                                                        Height="1"
+                                                                        Fill="#FF333333"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center" />
+                                                                </Grid>
+                                                            </Grid>
+
+                                                            <Border
+                                                                Background="#FFF2F2F2"
+                                                                BorderBrush="#FF111111"
+                                                                BorderThickness="1"
+                                                                Padding="2,0"
+                                                                MinHeight="12"
+                                                                MaxWidth="78">
+                                                                <TextBlock
+                                                                    Text="{x:Bind DisplayName}"
+                                                                    FontSize="8"
+                                                                    LineHeight="9"
+                                                                    CharacterSpacing="0"
+                                                                    TextAlignment="Center"
+                                                                    TextWrapping="NoWrap"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </GridView.ItemTemplate>
+                                        </GridView>
+
+                                        <TextBlock
+                                            Text="No files or folders found."
+                                            Visibility="{Binding MediaItemsEmptyVisibility}"
                                             Foreground="#FF2A2A2A"
                                             FontSize="12" />
                                     </StackPanel>

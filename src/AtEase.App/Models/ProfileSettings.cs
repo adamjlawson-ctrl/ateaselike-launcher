@@ -4,6 +4,7 @@ public class ProfileSettings
 {
     public const string LauncherSectionApps = "apps";
     public const string LauncherSectionFolders = "folders";
+    public const string LauncherSectionMediaPrefix = "media:";
 
     public int SchemaVersion { get; set; }
 
