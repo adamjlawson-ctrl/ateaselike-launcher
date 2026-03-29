@@ -2,6 +2,19 @@
 
 AtEase-Win11 is a WinUI 3 launcher prototype inspired by classic large-tile desktop launchers, built for Windows 11 with .NET 8.
 
+## Release Notes
+
+### Latest
+
+- Added removable media tabs with integrated media browsing support.
+- Added targeted eject flow that prompts for which removable drive to eject.
+- Added app-active indicator menu for switching between launched apps and returning to AtEase.
+- Implemented in-panel folder browsing with back navigation.
+- Added per-launch display selection for app launch targets.
+- Hardened non-primary display window placement, including fallback handling for shell-hosted apps like Calculator.
+- Improved launcher click reliability by using explicit click forwarding in key tile templates.
+- Refreshed project documentation and build/run guidance.
+
 ## Highlights
 
 - Launcher-style home experience with large app and folder tiles.
