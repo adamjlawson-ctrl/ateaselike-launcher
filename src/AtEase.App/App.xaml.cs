@@ -30,6 +30,8 @@ public partial class App : Application
         services.AddSingleton<Services.AppLaunchService>();
         services.AddSingleton<Services.FolderOpenService>();
         services.AddSingleton<Services.PathPickerService>();
+        services.AddSingleton<Services.WallpaperService>();
+        services.AddSingleton<Services.RemovableMediaService>();
 
         services.AddTransient<TileSettingsViewModel>();
         services.AddTransient<SettingsWindow>();

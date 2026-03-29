@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using AtEase.App.Models;
 using AtEase.App.Services;
 using CommunityToolkit.Mvvm.Input;
@@ -43,6 +45,9 @@ public partial class TileSettingsViewModel : ViewModelBase
         _settingsService = settingsService;
         _pathPickerService = pathPickerService;
 
+        AppTiles.CollectionChanged += AppTiles_CollectionChanged;
+        FolderTiles.CollectionChanged += FolderTiles_CollectionChanged;
+
         AddAppTileCommand = new RelayCommand(AddAppTile);
         AddFolderTileCommand = new RelayCommand(AddFolderTile);
         RemoveAppTileCommand = new RelayCommand<AppItem>(RemoveAppTile);
@@ -69,30 +74,38 @@ public partial class TileSettingsViewModel : ViewModelBase
         {
             FolderTiles.Add(CloneFolder(folder));
         }
+
+        RefreshPathHints();
     }
 
     private void AddAppTile()
     {
         ClearPendingRemovalState();
-        AppTiles.Add(new AppItem
+        var newItem = new AppItem
         {
             DisplayName = "New App",
             Path = string.Empty,
             IsVisible = true,
             SortOrder = NextAppSortOrder()
-        });
+        };
+
+        AppTiles.Add(newItem);
+        RefreshPathHints();
     }
 
     private void AddFolderTile()
     {
         ClearPendingRemovalState();
-        FolderTiles.Add(new FolderItem
+        var newItem = new FolderItem
         {
             DisplayName = "New Folder",
             Path = string.Empty,
             IsVisible = true,
             SortOrder = NextFolderSortOrder()
-        });
+        };
+
+        FolderTiles.Add(newItem);
+        RefreshPathHints();
     }
 
     private void RemoveAppTile(AppItem? item)
@@ -113,6 +126,7 @@ public partial class TileSettingsViewModel : ViewModelBase
         AppTiles.Remove(item);
         _pendingAppRemovalId = null;
         StatusMessage = $"Removed app tile '{item.DisplayName}'.";
+        RefreshPathHints();
     }
 
     private void RemoveFolderTile(FolderItem? item)
@@ -133,6 +147,7 @@ public partial class TileSettingsViewModel : ViewModelBase
         FolderTiles.Remove(item);
         _pendingFolderRemovalId = null;
         StatusMessage = $"Removed folder tile '{item.DisplayName}'.";
+        RefreshPathHints();
     }
 
     private async Task BrowseAppPathAsync(AppItem? item)
@@ -160,6 +175,7 @@ public partial class TileSettingsViewModel : ViewModelBase
             item.DisplayName = Path.GetFileNameWithoutExtension(result.Path);
         }
 
+        RefreshPathHints();
         StatusMessage = "App path selected.";
     }
 
@@ -188,6 +204,7 @@ public partial class TileSettingsViewModel : ViewModelBase
             item.DisplayName = new DirectoryInfo(result.Path).Name;
         }
 
+        RefreshPathHints();
         StatusMessage = "Folder path selected.";
     }
 
@@ -258,6 +275,7 @@ public partial class TileSettingsViewModel : ViewModelBase
 
         RemoveBlankAppTiles();
         RemoveBlankFolderTiles();
+        RefreshPathHints();
     }
 
     private void TrimAppTileValues()
@@ -311,6 +329,118 @@ public partial class TileSettingsViewModel : ViewModelBase
             .Where(group => group.Count() > 1)
             .Select(group => group.Key)
             .ToList();
+    }
+
+    private void AppTiles_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (AppItem item in e.OldItems)
+            {
+                item.PropertyChanged -= AppTile_PropertyChanged;
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (AppItem item in e.NewItems)
+            {
+                item.PropertyChanged += AppTile_PropertyChanged;
+            }
+        }
+
+        RefreshPathHints();
+    }
+
+    private void FolderTiles_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (FolderItem item in e.OldItems)
+            {
+                item.PropertyChanged -= FolderTile_PropertyChanged;
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (FolderItem item in e.NewItems)
+            {
+                item.PropertyChanged += FolderTile_PropertyChanged;
+            }
+        }
+
+        RefreshPathHints();
+    }
+
+    private void AppTile_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LauncherItem.Path) || string.IsNullOrEmpty(e.PropertyName))
+        {
+            RefreshPathHints();
+        }
+    }
+
+    private void FolderTile_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LauncherItem.Path) || string.IsNullOrEmpty(e.PropertyName))
+        {
+            RefreshPathHints();
+        }
+    }
+
+    private void RefreshPathHints()
+    {
+        var duplicateAppPaths = FindDuplicatePathSet(AppTiles.Select(a => a.Path));
+        var duplicateFolderPaths = FindDuplicatePathSet(FolderTiles.Select(f => f.Path));
+
+        foreach (var app in AppTiles)
+        {
+            app.PathHint = BuildPathHint(app.Path, duplicateAppPaths, isFile: true);
+        }
+
+        foreach (var folder in FolderTiles)
+        {
+            folder.PathHint = BuildPathHint(folder.Path, duplicateFolderPaths, isFile: false);
+        }
+    }
+
+    private static HashSet<string> FindDuplicatePathSet(IEnumerable<string> paths)
+    {
+        return paths
+            .Select(NormalizePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .GroupBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string BuildPathHint(string rawPath, HashSet<string> duplicatePaths, bool isFile)
+    {
+        var normalizedPath = NormalizePath(rawPath);
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+        {
+            return string.Empty;
+        }
+
+        var duplicateHint = duplicatePaths.Contains(normalizedPath)
+            ? "Duplicate path in this list."
+            : string.Empty;
+
+        var exists = isFile ? File.Exists(normalizedPath) : Directory.Exists(normalizedPath);
+        var existenceHint = exists
+            ? (isFile ? "File found." : "Folder found.")
+            : (isFile ? "File not found yet." : "Folder not found yet.");
+
+        return string.IsNullOrEmpty(duplicateHint)
+            ? existenceHint
+            : $"{duplicateHint} {existenceHint}";
+    }
+
+    private static string NormalizePath(string? path)
+    {
+        return path?.Trim() ?? string.Empty;
     }
 
     private void ClearPendingRemovalState()

@@ -60,11 +60,36 @@ public class SettingsService
 
     public async Task SaveSettingsAsync(ProfileSettings settings, CancellationToken cancellationToken = default)
     {
+        await SaveSettingsAsync(settings, raiseSettingsSavedEvent: true, cancellationToken);
+    }
+
+    public async Task SaveSelectedLauncherSectionAsync(string section, CancellationToken cancellationToken = default)
+    {
+        var settings = await LoadSettingsAsync(cancellationToken);
+        var normalizedSection = NormalizeLauncherSection(section);
+
+        if (string.Equals(settings.SelectedLauncherSection, normalizedSection, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        settings.SelectedLauncherSection = normalizedSection;
+        await SaveSettingsAsync(settings, raiseSettingsSavedEvent: false, cancellationToken);
+    }
+
+    private async Task SaveSettingsAsync(
+        ProfileSettings settings,
+        bool raiseSettingsSavedEvent,
+        CancellationToken cancellationToken = default)
+    {
         EnsureSettingsFolderExists();
 
         await using var stream = File.Create(_settingsFilePath);
         await JsonSerializer.SerializeAsync(stream, settings, SerializerOptions, cancellationToken);
-        SettingsSaved?.Invoke(this, EventArgs.Empty);
+        if (raiseSettingsSavedEvent)
+        {
+            SettingsSaved?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public ProfileSettings CreateDefaultSettings()
@@ -75,6 +100,7 @@ public class SettingsService
             ProfileName = Environment.UserName,
             ShowFolders = true,
             DefaultPageId = "main",
+            SelectedLauncherSection = ProfileSettings.LauncherSectionApps,
             AppTiles = CreateDefaultAppTiles(),
             FolderTiles = CreateDefaultFolderTiles()
         };
@@ -147,6 +173,13 @@ public class SettingsService
             ? Environment.UserName
             : settings.ProfileName;
 
+        var normalizedSection = NormalizeLauncherSection(settings.SelectedLauncherSection);
+        if (!string.Equals(settings.SelectedLauncherSection, normalizedSection, StringComparison.Ordinal))
+        {
+            settings.SelectedLauncherSection = normalizedSection;
+            wasUpdated = true;
+        }
+
         if (settings.AppTiles is null)
         {
             settings.AppTiles = [];
@@ -174,5 +207,15 @@ public class SettingsService
         }
 
         return (settings, wasUpdated);
+    }
+
+    private static string NormalizeLauncherSection(string? section)
+    {
+        if (string.Equals(section, ProfileSettings.LauncherSectionFolders, StringComparison.OrdinalIgnoreCase))
+        {
+            return ProfileSettings.LauncherSectionFolders;
+        }
+
+        return ProfileSettings.LauncherSectionApps;
     }
 }

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace AtEase.App.Models;
 
@@ -11,6 +12,7 @@ public class LauncherItem : ObservableObject
     private string _iconHint = string.Empty;
     private bool _isVisible = true;
     private int _sortOrder;
+    private string _pathHint = string.Empty;
 
     public string Id
     {
@@ -52,5 +54,12 @@ public class LauncherItem : ObservableObject
     {
         get => _sortOrder;
         set => SetProperty(ref _sortOrder, value);
+    }
+
+    [JsonIgnore]
+    public string PathHint
+    {
+        get => _pathHint;
+        set => SetProperty(ref _pathHint, value);
     }
 }
