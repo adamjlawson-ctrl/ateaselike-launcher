@@ -33,11 +33,14 @@ public partial class App : Application
         services.AddSingleton<Services.AppLaunchService>();
         services.AddSingleton<Services.FolderOpenService>();
         services.AddSingleton<Services.PathPickerService>();
+        services.AddSingleton<Services.CuratedAppDiscoveryService>();
+        services.AddSingleton<Services.AppPickerService>();
         services.AddSingleton<Services.WallpaperService>();
         services.AddSingleton<Services.RemovableMediaService>();
         services.AddSingleton<Services.SpecialMenuActionService>();
         services.AddSingleton<Services.ApplicationWindowSwitchService>();
         services.AddSingleton<Services.DisplayLayoutService>();
+        services.AddSingleton<Services.ExecutableIconCacheService>();
 
         services.AddTransient<TileSettingsViewModel>();
         services.AddTransient<SettingsWindow>();

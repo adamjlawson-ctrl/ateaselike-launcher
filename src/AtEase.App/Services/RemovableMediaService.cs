@@ -1,17 +1,25 @@
 using System.IO;
+using System.Management;
 using AtEase.App.Models;
 
 namespace AtEase.App.Services;
 
 public class RemovableMediaService
 {
+    private readonly HashSet<string> _usbLogicalDriveRoots;
+
+    public RemovableMediaService()
+    {
+        _usbLogicalDriveRoots = GetUsbLogicalDriveRoots();
+    }
+
     public IReadOnlyList<FolderItem> GetRemovableDriveFolderItems()
     {
         var items = new List<FolderItem>();
 
         foreach (var drive in DriveInfo.GetDrives())
         {
-            if (drive.DriveType != DriveType.Removable)
+            if (!IsRemovableLikeDrive(drive))
             {
                 continue;
             }
@@ -54,7 +62,7 @@ public class RemovableMediaService
 
         foreach (var drive in DriveInfo.GetDrives())
         {
-            if (drive.DriveType != DriveType.Removable && drive.DriveType != DriveType.CDRom)
+            if (!IsRemovableLikeDrive(drive))
             {
                 continue;
             }
@@ -83,7 +91,7 @@ public class RemovableMediaService
 
         foreach (var drive in DriveInfo.GetDrives())
         {
-            if (drive.DriveType != DriveType.Removable && drive.DriveType != DriveType.CDRom)
+            if (!IsRemovableLikeDrive(drive))
             {
                 continue;
             }
@@ -128,7 +136,7 @@ public class RemovableMediaService
                 });
             }
 
-            var options = new EnumerationOptions
+            var options = new System.IO.EnumerationOptions
             {
                 IgnoreInaccessible = true,
                 RecurseSubdirectories = false,
@@ -232,5 +240,77 @@ public class RemovableMediaService
         }
 
         return string.Empty;
+    }
+
+    private bool IsRemovableLikeDrive(DriveInfo drive)
+    {
+        if (drive.DriveType == DriveType.Removable || drive.DriveType == DriveType.CDRom)
+        {
+            return true;
+        }
+
+        if (drive.DriveType != DriveType.Fixed)
+        {
+            return false;
+        }
+
+        return _usbLogicalDriveRoots.Contains(drive.Name.TrimEnd('\\').ToUpperInvariant());
+    }
+
+    private static HashSet<string> GetUsbLogicalDriveRoots()
+    {
+        var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            using var diskSearcher = new ManagementObjectSearcher(
+                "SELECT DeviceID FROM Win32_DiskDrive WHERE InterfaceType='USB'");
+
+            foreach (var diskObj in diskSearcher.Get())
+            {
+                using var disk = (ManagementObject)diskObj;
+                var diskId = Convert.ToString(disk["DeviceID"]);
+                if (string.IsNullOrWhiteSpace(diskId))
+                {
+                    continue;
+                }
+
+                var escapedDiskId = diskId.Replace("\\", "\\\\");
+                using var partitionSearcher = new ManagementObjectSearcher(
+                    $"ASSOCIATORS OF {{Win32_DiskDrive.DeviceID=\"{escapedDiskId}\"}} WHERE AssocClass = Win32_DiskDriveToDiskPartition");
+
+                foreach (var partitionObj in partitionSearcher.Get())
+                {
+                    using var partition = (ManagementObject)partitionObj;
+                    var partitionId = Convert.ToString(partition["DeviceID"]);
+                    if (string.IsNullOrWhiteSpace(partitionId))
+                    {
+                        continue;
+                    }
+
+                    var escapedPartitionId = partitionId.Replace("\\", "\\\\");
+                    using var logicalSearcher = new ManagementObjectSearcher(
+                        $"ASSOCIATORS OF {{Win32_DiskPartition.DeviceID=\"{escapedPartitionId}\"}} WHERE AssocClass = Win32_LogicalDiskToPartition");
+
+                    foreach (var logicalObj in logicalSearcher.Get())
+                    {
+                        using var logical = (ManagementObject)logicalObj;
+                        var deviceId = Convert.ToString(logical["DeviceID"]);
+                        if (string.IsNullOrWhiteSpace(deviceId))
+                        {
+                            continue;
+                        }
+
+                        roots.Add(deviceId.TrimEnd('\\').ToUpperInvariant());
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore WMI discovery errors and fall back to classic removable/CD detection only.
+        }
+
+        return roots;
     }
 }

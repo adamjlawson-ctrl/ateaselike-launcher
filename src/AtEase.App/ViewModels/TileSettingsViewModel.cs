@@ -11,8 +11,10 @@ public partial class TileSettingsViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService;
     private readonly PathPickerService _pathPickerService;
+    private readonly AppPickerService _appPickerService;
     private ProfileSettings _settings = new();
     private string _statusMessage = "Edit tiles and select Save Changes.";
+    private string _selectedIconSizeMode = "Classic";
     private string? _pendingAppRemovalId;
     private string? _pendingFolderRemovalId;
 
@@ -20,10 +22,23 @@ public partial class TileSettingsViewModel : ViewModelBase
 
     public ObservableCollection<FolderItem> FolderTiles { get; } = [];
 
+    public ObservableCollection<string> IconSizeOptions { get; } = ["Classic", "Large"];
+
+    public string SelectedIconSizeMode
+    {
+        get => _selectedIconSizeMode;
+        set => SetProperty(ref _selectedIconSizeMode, value);
+    }
+
     public string StatusMessage
     {
         get => _statusMessage;
         private set => SetProperty(ref _statusMessage, value);
+    }
+
+    public void SetStatusMessageForDiagnostics(string message)
+    {
+        StatusMessage = message;
     }
 
     public IRelayCommand AddAppTileCommand { get; }
@@ -40,10 +55,14 @@ public partial class TileSettingsViewModel : ViewModelBase
 
     public IAsyncRelayCommand SaveCommand { get; }
 
-    public TileSettingsViewModel(SettingsService settingsService, PathPickerService pathPickerService)
+    public TileSettingsViewModel(
+        SettingsService settingsService,
+        PathPickerService pathPickerService,
+        AppPickerService appPickerService)
     {
         _settingsService = settingsService;
         _pathPickerService = pathPickerService;
+        _appPickerService = appPickerService;
 
         AppTiles.CollectionChanged += AppTiles_CollectionChanged;
         FolderTiles.CollectionChanged += FolderTiles_CollectionChanged;
@@ -74,6 +93,10 @@ public partial class TileSettingsViewModel : ViewModelBase
         {
             FolderTiles.Add(CloneFolder(folder));
         }
+
+        SelectedIconSizeMode = string.Equals(_settings.IconSizeMode, "Large", StringComparison.OrdinalIgnoreCase)
+            ? "Large"
+            : "Classic";
 
         RefreshPathHints();
     }
@@ -157,26 +180,52 @@ public partial class TileSettingsViewModel : ViewModelBase
             return;
         }
 
-        var result = await _pathPickerService.PickAppExecutablePathAsync();
-        if (result.IsCancelled)
+        try
         {
-            return;
-        }
+            StatusMessage = "Opening app picker...";
 
-        if (!result.IsSuccess)
+            var excludedPaths = AppTiles
+                .Where(app => app.Id != item.Id)
+                .Select(app => app.Path)
+                .ToList();
+
+            var result = await _appPickerService.PickAppAsync(
+                excludedPaths,
+                diagnostics => SetStatusMessageForDiagnostics(diagnostics));
+            if (result.IsCancelled)
+            {
+                StatusMessage = "App selection cancelled.";
+                return;
+            }
+
+            if (!result.IsSuccess)
+            {
+                StatusMessage = string.IsNullOrWhiteSpace(result.Message)
+                    ? "App picker failed."
+                    : result.Message;
+                return;
+            }
+
+            if (result.Entry is null)
+            {
+                StatusMessage = "App selection failed unexpectedly.";
+                return;
+            }
+
+            item.DisplayName = result.Entry.DisplayName;
+            item.Path = result.Entry.LaunchPath;
+            if (!string.IsNullOrWhiteSpace(result.Entry.IconHint))
+            {
+                item.IconHint = result.Entry.IconHint;
+            }
+
+            RefreshPathHints();
+            StatusMessage = "App selected.";
+        }
+        catch (Exception ex)
         {
-            StatusMessage = result.Message;
-            return;
+            StatusMessage = $"Browse failed: {ex.Message}";
         }
-
-        item.Path = result.Path;
-        if (string.IsNullOrWhiteSpace(item.DisplayName))
-        {
-            item.DisplayName = Path.GetFileNameWithoutExtension(result.Path);
-        }
-
-        RefreshPathHints();
-        StatusMessage = "App path selected.";
     }
 
     private async Task BrowseFolderPathAsync(FolderItem? item)
@@ -224,6 +273,9 @@ public partial class TileSettingsViewModel : ViewModelBase
 
         _settings.AppTiles = AppTiles.OrderBy(a => a.SortOrder).Select(CloneApp).ToList();
         _settings.FolderTiles = FolderTiles.OrderBy(f => f.SortOrder).Select(CloneFolder).ToList();
+        _settings.IconSizeMode = string.Equals(SelectedIconSizeMode, "Large", StringComparison.OrdinalIgnoreCase)
+            ? "Large"
+            : "Classic";
 
         try
         {
@@ -244,9 +296,9 @@ public partial class TileSettingsViewModel : ViewModelBase
                 ? "Settings saved successfully."
                 : $"Settings saved with warnings: {string.Join(" ", warnings)}";
         }
-        catch
+        catch (Exception ex)
         {
-            StatusMessage = "Could not save settings. Check entries and try again.";
+            StatusMessage = $"Could not save settings: {ex.Message}";
         }
     }
 

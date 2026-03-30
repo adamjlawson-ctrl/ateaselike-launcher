@@ -24,11 +24,21 @@
             Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
             CornerRadius="8"
             Padding="10">
-            <TextBlock Text="{Binding StatusMessage}" TextWrapping="WrapWholeWords" />
+            <TextBlock x:Name="StatusTextBlock" Text="{Binding StatusMessage}" TextWrapping="WrapWholeWords" />
         </Border>
 
         <ScrollViewer Grid.Row="2">
             <StackPanel Spacing="18">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Launcher Icon Size" FontSize="20" FontWeight="SemiBold" />
+                        <ComboBox
+                            Width="180"
+                            ItemsSource="{Binding IconSizeOptions}"
+                            SelectedItem="{Binding SelectedIconSizeMode, Mode=TwoWay}" />
+                    </StackPanel>
+                </Border>
+
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="12">
                     <StackPanel Spacing="10">
                         <Grid>
@@ -68,8 +78,7 @@
                                             Grid.Column="2"
                                             VerticalAlignment="Bottom"
                                             Content="Browse"
-                                            Command="{Binding DataContext.BrowseAppPathCommand, ElementName=Root}"
-                                            CommandParameter="{Binding}" />
+                                            Click="BrowseAppButton_Click" />
                                         <CheckBox Grid.Column="3" Content="Visible" VerticalAlignment="Center" IsChecked="{Binding IsVisible, Mode=TwoWay}" />
                                         <NumberBox Grid.Column="4" Header="Sort" SpinButtonPlacementMode="Compact" Value="{Binding SortOrder, Mode=TwoWay}" />
                                         <Button

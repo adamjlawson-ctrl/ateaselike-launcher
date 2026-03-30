@@ -16,6 +16,8 @@ public class ProfileSettings
 
     public string SelectedLauncherSection { get; set; } = LauncherSectionApps;
 
+    public string IconSizeMode { get; set; } = "Classic";
+
     public List<AppItem> AppTiles { get; set; } = [];
 
     public List<FolderItem> FolderTiles { get; set; } = [];

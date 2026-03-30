@@ -7,7 +7,7 @@ public class SettingsService
 {
     private const string AppFolderName = "AtEaseWin11";
     private const string SettingsFileName = "settings.json";
-    private const int CurrentSchemaVersion = 2;
+    private const int CurrentSchemaVersion = 3;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -35,24 +35,27 @@ public class SettingsService
         if (!File.Exists(_settingsFilePath))
         {
             var defaults = CreateDefaultSettings();
-            await SaveSettingsAsync(defaults, cancellationToken);
+            await SaveSettingsAsync(defaults, raiseSettingsSavedEvent: false, cancellationToken);
             return defaults;
         }
 
-        await using var stream = File.OpenRead(_settingsFilePath);
-        var loaded = await JsonSerializer.DeserializeAsync<ProfileSettings>(stream, SerializerOptions, cancellationToken);
+        ProfileSettings? loaded;
+        await using (var stream = File.OpenRead(_settingsFilePath))
+        {
+            loaded = await JsonSerializer.DeserializeAsync<ProfileSettings>(stream, SerializerOptions, cancellationToken);
+        }
 
         if (loaded is null)
         {
             var defaults = CreateDefaultSettings();
-            await SaveSettingsAsync(defaults, cancellationToken);
+            await SaveSettingsAsync(defaults, raiseSettingsSavedEvent: false, cancellationToken);
             return defaults;
         }
 
         var (normalized, wasUpdated) = NormalizeSettings(loaded);
         if (wasUpdated)
         {
-            await SaveSettingsAsync(normalized, cancellationToken);
+            await SaveSettingsAsync(normalized, raiseSettingsSavedEvent: false, cancellationToken);
         }
 
         return normalized;
@@ -77,6 +80,11 @@ public class SettingsService
         await SaveSettingsAsync(settings, raiseSettingsSavedEvent: false, cancellationToken);
     }
 
+    public async Task SaveSettingsSilentlyAsync(ProfileSettings settings, CancellationToken cancellationToken = default)
+    {
+        await SaveSettingsAsync(settings, raiseSettingsSavedEvent: false, cancellationToken);
+    }
+
     private async Task SaveSettingsAsync(
         ProfileSettings settings,
         bool raiseSettingsSavedEvent,
@@ -84,8 +92,39 @@ public class SettingsService
     {
         EnsureSettingsFolderExists();
 
-        await using var stream = File.Create(_settingsFilePath);
-        await JsonSerializer.SerializeAsync(stream, settings, SerializerOptions, cancellationToken);
+        var json = JsonSerializer.Serialize(settings, SerializerOptions);
+        var tempPath = _settingsFilePath + ".tmp";
+
+        var lastError = default(Exception);
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                await File.WriteAllTextAsync(tempPath, json, cancellationToken);
+                File.Copy(tempPath, _settingsFilePath, overwrite: true);
+                File.Delete(tempPath);
+                lastError = null;
+                break;
+            }
+            catch (IOException ex)
+            {
+                lastError = ex;
+                await Task.Delay(150 * (attempt + 1), cancellationToken);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                lastError = ex;
+                await Task.Delay(150 * (attempt + 1), cancellationToken);
+            }
+        }
+
+        if (lastError is not null)
+        {
+            throw lastError;
+        }
+
         if (raiseSettingsSavedEvent)
         {
             SettingsSaved?.Invoke(this, EventArgs.Empty);
@@ -101,6 +140,7 @@ public class SettingsService
             ShowFolders = true,
             DefaultPageId = "main",
             SelectedLauncherSection = ProfileSettings.LauncherSectionApps,
+            IconSizeMode = "Classic",
             AppTiles = CreateDefaultAppTiles(),
             FolderTiles = CreateDefaultFolderTiles()
         };
@@ -180,6 +220,13 @@ public class SettingsService
             wasUpdated = true;
         }
 
+        var normalizedIconSizeMode = NormalizeIconSizeMode(settings.IconSizeMode);
+        if (!string.Equals(settings.IconSizeMode, normalizedIconSizeMode, StringComparison.Ordinal))
+        {
+            settings.IconSizeMode = normalizedIconSizeMode;
+            wasUpdated = true;
+        }
+
         if (settings.AppTiles is null)
         {
             settings.AppTiles = [];
@@ -192,12 +239,20 @@ public class SettingsService
             wasUpdated = true;
         }
 
-        // Migrate older settings files that predate persisted tile lists.
-        if (settings.SchemaVersion < CurrentSchemaVersion && settings.AppTiles.Count == 0 && settings.FolderTiles.Count == 0)
+        // Migrate older settings files that predate complete tile persistence.
+        if (settings.SchemaVersion < CurrentSchemaVersion)
         {
-            settings.AppTiles = CreateDefaultAppTiles();
-            settings.FolderTiles = CreateDefaultFolderTiles();
-            wasUpdated = true;
+            if (settings.AppTiles.Count == 0)
+            {
+                settings.AppTiles = CreateDefaultAppTiles();
+                wasUpdated = true;
+            }
+
+            if (settings.FolderTiles.Count == 0)
+            {
+                settings.FolderTiles = CreateDefaultFolderTiles();
+                wasUpdated = true;
+            }
         }
 
         if (settings.SchemaVersion != CurrentSchemaVersion)
@@ -223,5 +278,15 @@ public class SettingsService
         }
 
         return ProfileSettings.LauncherSectionApps;
+    }
+
+    private static string NormalizeIconSizeMode(string? mode)
+    {
+        if (string.Equals(mode, "Large", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Large";
+        }
+
+        return "Classic";
     }
 }

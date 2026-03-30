@@ -28,6 +28,7 @@ public class LauncherViewModel : ViewModelBase
     private readonly DisplayLayoutService _displayLayoutService;
     private readonly SpecialMenuActionService _specialMenuActionService;
     private readonly ApplicationWindowSwitchService _applicationWindowSwitchService;
+    private readonly ExecutableIconCacheService _executableIconCacheService;
     private readonly IServiceProvider _serviceProvider;
     private readonly DispatcherQueueTimer? _clockTimer;
     private readonly Stack<string> _folderNavigationBackStack = [];
@@ -43,6 +44,7 @@ public class LauncherViewModel : ViewModelBase
     private bool _suppressTabSelectionPersistence;
     private ImageSource? _wallpaperImageSource;
     private string _currentApplicationDisplayName = AtEaseApplicationLabel;
+    private string _iconSizeMode = "Classic";
 
     public ObservableCollection<AppItem> Apps { get; } = [];
 
@@ -196,6 +198,37 @@ public class LauncherViewModel : ViewModelBase
         private set => SetProperty(ref _clockText, value);
     }
 
+    public string IconSizeMode
+    {
+        get => _iconSizeMode;
+        private set
+        {
+            if (!SetProperty(ref _iconSizeMode, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(LauncherItemButtonWidth));
+            OnPropertyChanged(nameof(LauncherItemButtonHeight));
+            OnPropertyChanged(nameof(LauncherIconSlotSize));
+            OnPropertyChanged(nameof(LauncherIconImageSize));
+            OnPropertyChanged(nameof(LauncherLabelMaxWidth));
+            OnPropertyChanged(nameof(LauncherItemSpacing));
+        }
+    }
+
+    public double LauncherItemButtonWidth => IsLargeIconMode ? 88 : 84;
+
+    public double LauncherItemButtonHeight => IsLargeIconMode ? 84 : 80;
+
+    public double LauncherIconSlotSize => IsLargeIconMode ? 38 : 36;
+
+    public double LauncherIconImageSize => IsLargeIconMode ? 26 : 24;
+
+    public double LauncherLabelMaxWidth => IsLargeIconMode ? 82 : 78;
+
+    public double LauncherItemSpacing => IsLargeIconMode ? 2 : 1;
+
     public IRelayCommand<AppItem> AppTileClickCommand { get; }
 
     public IRelayCommand<FolderItem> FolderTileClickCommand { get; }
@@ -237,6 +270,7 @@ public class LauncherViewModel : ViewModelBase
         DisplayLayoutService displayLayoutService,
         SpecialMenuActionService specialMenuActionService,
         ApplicationWindowSwitchService applicationWindowSwitchService,
+        ExecutableIconCacheService executableIconCacheService,
         IServiceProvider serviceProvider)
     {
         _settingsService = settingsService;
@@ -247,6 +281,7 @@ public class LauncherViewModel : ViewModelBase
         _displayLayoutService = displayLayoutService;
         _specialMenuActionService = specialMenuActionService;
         _applicationWindowSwitchService = applicationWindowSwitchService;
+        _executableIconCacheService = executableIconCacheService;
         _serviceProvider = serviceProvider;
         _settingsService.SettingsSaved += OnSettingsSaved;
         _appLaunchService.ApplicationLaunched += OnApplicationLaunched;
@@ -289,16 +324,24 @@ public class LauncherViewModel : ViewModelBase
         LoadWallpaperBackground();
 
         var settings = await _settingsService.LoadSettingsAsync();
+        await EnsureBaselineTilesAsync(settings);
 
         _suppressTabSelectionPersistence = true;
         SelectedTabIndex = ToTabIndex(settings.SelectedLauncherSection);
         _suppressTabSelectionPersistence = false;
+        ApplyIconSizeMode(settings.IconSizeMode);
 
         Apps.Clear();
         foreach (var app in settings.AppTiles
                      .Where(a => a.IsVisible)
                      .OrderBy(a => a.SortOrder))
         {
+            var extractedIconPath = _executableIconCacheService.TryGetExecutableIconImagePath(app.Path);
+            if (!string.IsNullOrWhiteSpace(extractedIconPath))
+            {
+                app.IconHint = extractedIconPath;
+            }
+
             Apps.Add(app);
         }
 
@@ -330,6 +373,85 @@ public class LauncherViewModel : ViewModelBase
         }
 
         RefreshApplicationTrackingState();
+    }
+
+    private async Task EnsureBaselineTilesAsync(ProfileSettings settings)
+    {
+        var wasUpdated = false;
+
+        if (!settings.AppTiles.Any(a => string.Equals(a.DisplayName, "Calculator", StringComparison.OrdinalIgnoreCase)))
+        {
+            settings.AppTiles.Add(new AppItem
+            {
+                DisplayName = "Calculator",
+                Path = Path.Combine(Environment.SystemDirectory, "calc.exe"),
+                IconHint = "Calculator",
+                SortOrder = NextSortOrder(settings.AppTiles.Select(a => a.SortOrder)),
+                IsVisible = true
+            });
+            wasUpdated = true;
+        }
+
+        if (!settings.AppTiles.Any(a => string.Equals(a.DisplayName, "Notepad", StringComparison.OrdinalIgnoreCase)))
+        {
+            settings.AppTiles.Add(new AppItem
+            {
+                DisplayName = "Notepad",
+                Path = Path.Combine(Environment.SystemDirectory, "notepad.exe"),
+                IconHint = "Document",
+                SortOrder = NextSortOrder(settings.AppTiles.Select(a => a.SortOrder)),
+                IsVisible = true
+            });
+            wasUpdated = true;
+        }
+
+        var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        if (!settings.FolderTiles.Any(f => string.Equals(f.Path, desktopPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            settings.FolderTiles.Add(new FolderItem
+            {
+                DisplayName = "Desktop",
+                Path = desktopPath,
+                IconHint = "Folder",
+                SortOrder = NextSortOrder(settings.FolderTiles.Select(f => f.SortOrder)),
+                IsVisible = true
+            });
+            wasUpdated = true;
+        }
+
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        if (!settings.FolderTiles.Any(f => string.Equals(f.Path, documentsPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            settings.FolderTiles.Add(new FolderItem
+            {
+                DisplayName = "Documents",
+                Path = documentsPath,
+                IconHint = "Folder",
+                SortOrder = NextSortOrder(settings.FolderTiles.Select(f => f.SortOrder)),
+                IsVisible = true
+            });
+            wasUpdated = true;
+        }
+
+        if (!wasUpdated)
+        {
+            return;
+        }
+
+        try
+        {
+            await _settingsService.SaveSettingsSilentlyAsync(settings);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not persist baseline tiles: {ex.Message}";
+        }
+    }
+
+    private static int NextSortOrder(IEnumerable<int> values)
+    {
+        var list = values.ToList();
+        return list.Count == 0 ? 0 : list.Max() + 1;
     }
 
     private void OnAppTileClick(AppItem? app)
@@ -399,6 +521,15 @@ public class LauncherViewModel : ViewModelBase
         _ = InitializeAsync();
         StatusMessage = "Launcher refreshed from saved settings.";
     }
+
+    private void ApplyIconSizeMode(string? mode)
+    {
+        IconSizeMode = string.Equals(mode, "Large", StringComparison.OrdinalIgnoreCase)
+            ? "Large"
+            : "Classic";
+    }
+
+    private bool IsLargeIconMode => string.Equals(IconSizeMode, "Large", StringComparison.OrdinalIgnoreCase);
 
     private void SwitchPanel(string? panel)
     {
